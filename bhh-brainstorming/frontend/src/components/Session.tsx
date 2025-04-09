@@ -150,6 +150,7 @@ const Session: React.FC = () => {
         <>
           <h1 className="header">Welcome, {username}</h1>
           {/* Create Session Section */}
+          {!currentSessionId && (
           <div className="create-session">
             <h2>Create Session</h2>
             <input
@@ -165,6 +166,8 @@ const Session: React.FC = () => {
             ></textarea>
             <button onClick={handleCreateSession}>Create Session</button>
           </div>
+          )
+      }
 
           {/* If not in a session, show available sessions */}
           {!currentSessionId && (
@@ -192,10 +195,12 @@ const Session: React.FC = () => {
             <>
               <div className="current-session">
                 <h2>Current Session</h2>
-                <p>{currentSessionId}</p>
+                <div className="session-info">
+                <p className="session-id-section">ID: <span className="session-id">{currentSessionId}</span></p>
                 <button className="leave-button" onClick={handleLeaveSession}>
                   Leave
                 </button>
+                </div>
               </div>
 
               {/* Session Chat Section */}

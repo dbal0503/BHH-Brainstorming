@@ -238,3 +238,20 @@ button:hover {
   background-color: var(--primary-hover);
   transform: translateY(-2px);
 }
+
+.session-info {
+  display:flex;
+  flex-direction: row;
+  gap: 30px;
+  justify-content: center;
+  align-items: center;
+}
+
+.session-id {
+  color: #4d4d4d;
+}
+.session-id-section {
+  font-size: 22px;
+  color: #000000;
+  margin-bottom: 10px;
+}
