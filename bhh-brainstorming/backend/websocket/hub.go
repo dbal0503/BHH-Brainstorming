@@ -8,15 +8,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
+	"bhh-brainstorming/backend/services"
 	"strconv"
+
+	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	hub     *Hub
-	conn    *websocket.Conn
-	send    chan []byte
-	userID  string
+	hub      *Hub
+	conn     *websocket.Conn
+	send     chan []byte
+	userID   string
 	Username string
 }
 
@@ -65,6 +67,7 @@ type Hub struct {
 	register       chan *Client
 	unregister     chan *Client
 	broadcast      chan []byte
+	mediaProcessor *services.MediaProcessor
 	mutex          sync.RWMutex
 }
 
@@ -84,6 +87,7 @@ func NewHub() *Hub {
 		register:       make(chan *Client),
 		unregister:     make(chan *Client),
 		broadcast:      make(chan []byte),
+		mediaProcessor: nil,
 	}
 }
 
@@ -296,7 +300,7 @@ func (h *Hub) handleIdeaSubmission(client *Client, message Message) {
 		return
 	}
 
-	// Expect Data to be an object with "content" and optional "mediaType"
+	// Expect Data to be an object with "content", "mediaType", and optionally "mediaURL"
 	dataMap, ok := message.Data.(map[string]interface{})
 	if !ok {
 		log.Println("Invalid data for idea submission")
@@ -304,6 +308,8 @@ func (h *Hub) handleIdeaSubmission(client *Client, message Message) {
 	}
 	content, contentOk := dataMap["content"].(string)
 	mediaType, mtOk := dataMap["mediaType"].(string)
+	mediaURL, _ := dataMap["mediaURL"].(string)
+
 	if !contentOk || content == "" {
 		log.Println("Idea content is required")
 		return
@@ -311,13 +317,16 @@ func (h *Hub) handleIdeaSubmission(client *Client, message Message) {
 	if !mtOk {
 		mediaType = "text"
 	}
+
 	idea := &models.Idea{
-		ID:         generateSessionID(), // reuse session ID generator for idea IDs
-		Content:    content,
-		MediaType:  mediaType,
+		ID:          generateSessionID(), // reuse session ID generator for idea IDs
+		Content:     content,
+		MediaType:   mediaType,
+		MediaURL:    mediaURL,
 		SubmittedBy: models.User{ID: client.userID, Username: message.Username},
-		Ratings:    []models.IdeaRating{},
+		Ratings:     []models.IdeaRating{},
 	}
+
 	session, err := h.sessions.GetSession(sessionID)
 	if err != nil {
 		return
@@ -341,17 +350,60 @@ func (h *Hub) handleAggregateIdeas(client *Client, message Message) {
 	if err != nil {
 		return
 	}
-	// Dummy aggregation: combine all idea contents
-	agg := "Aggregated Ideas:\n"
-	for _, idea := range session.Ideas {
-		agg += "- " + idea.Content + "\n"
-	}
-	aggregation, _ := json.Marshal(Message{
-		Type:      "aggregation_result",
+
+	// First inform all clients that aggregation has started
+	startMsg, _ := json.Marshal(Message{
+		Type:      "aggregation_started",
 		SessionID: sessionID,
-		Data:      agg,
+		Data:      "Processing ideas ...",
 	})
-	h.broadcastToSession(sessionID, aggregation)
+	h.broadcastToSession(sessionID, startMsg)
+
+	if h.mediaProcessor == nil {
+		errorMsg, _ := json.Marshal(Message{
+			Type:      "aggregation_error",
+			SessionID: sessionID,
+			Data:      "Media processor not configured",
+		})
+		h.broadcastToSession(sessionID, errorMsg)
+		return
+	}
+
+	var items []struct {
+		MediaType string
+		MediaURL  string
+	}
+
+	for _, idea := range session.Ideas {
+		items = append(items, struct {
+			MediaType string
+			MediaURL  string
+		}{
+			MediaType: idea.MediaType,
+			MediaURL:  idea.MediaURL,
+		})
+	}
+
+	go func() {
+		aggregatedContent, err := h.mediaProcessor.AggregateMedia(items)
+		if err != nil {
+			log.Printf("Error during idea aggregation: %v", err)
+			errorMsg, _ := json.Marshal(Message{
+				Type:      "aggregation_error",
+				SessionID: sessionID,
+				Data:      "Failed to aggregate ideas: " + err.Error(),
+			})
+			h.broadcastToSession(sessionID, errorMsg)
+			return
+		}
+
+		aggregation, _ := json.Marshal(Message{
+			Type:      "aggregation_result",
+			SessionID: sessionID,
+			Data:      aggregatedContent,
+		})
+		h.broadcastToSession(sessionID, aggregation)
+	}()
 }
 
 func (h *Hub) handleIdeaRating(client *Client, message Message) {
@@ -411,4 +463,9 @@ func (h *Hub) broadcastToSession(sessionID string, message []byte) {
 func generateSessionID() string {
 	// Simple random ID generation; in a real app, use a more robust method
 	return strconv.FormatInt(time.Now().UnixNano(), 10)
+}
+
+// SetMediaProcessor sets the media processor service for the hub
+func (h *Hub) SetMediaProcessor(processor *services.MediaProcessor) {
+	h.mediaProcessor = processor
 }

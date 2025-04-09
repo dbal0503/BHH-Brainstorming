@@ -14,30 +14,32 @@ type User struct {
 }
 
 type IdeaRating struct {
-	UserID    string `json:"userId"`
-	Novelty   int    `json:"novelty"`
-	Feasibility int  `json:"feasibility"`
-	Usefulness int    `json:"usefulness"`
-	Comment   string `json:"comment,omitempty"`
+	UserID      string `json:"userId"`
+	Novelty     int    `json:"novelty"`
+	Feasibility int    `json:"feasibility"`
+	Usefulness  int    `json:"usefulness"`
+	Comment     string `json:"comment,omitempty"`
 }
 
 type Idea struct {
-	ID         string       `json:"id"`
-	Content    string       `json:"content"`
-	MediaType  string       `json:"mediaType"` // e.g. "text", "image", "audio", "video"
-	SubmittedBy User        `json:"submittedBy"`
-	Ratings    []IdeaRating `json:"ratings"`
+	ID          string       `json:"id"`
+	Content     string       `json:"content"`
+	MediaType   string       `json:"mediaType"`           // e.g. "text", "image", "audio", "video"
+	MediaURL    string       `json:"mediaURL"`            // URL of the media file
+	MediaMeta   interface{}  `json:"mediaMeta,omitempty"` // metadata of the media file
+	SubmittedBy User         `json:"submittedBy"`
+	Ratings     []IdeaRating `json:"ratings"`
 }
 
 type Session struct {
-	ID              string            `json:"id"`
-	Name            string            `json:"name"`
+	ID               string           `json:"id"`
+	Name             string           `json:"name"`
 	GuidingQuestions []string         `json:"guidingQuestions"` // provided by team leader
-	CreatedAt       time.Time         `json:"createdAt"`
-	Creator         User              `json:"creator"`
-	Users           map[string]*User  `json:"users"`
-	Ideas           []*Idea           `json:"ideas"` // collected idea submissions
-	mutex           sync.RWMutex
+	CreatedAt        time.Time        `json:"createdAt"`
+	Creator          User             `json:"creator"`
+	Users            map[string]*User `json:"users"`
+	Ideas            []*Idea          `json:"ideas"` // collected idea submissions
+	mutex            sync.RWMutex
 }
 
 func NewSession(id string, name string, guidingQuestions []string, creator User) *Session {

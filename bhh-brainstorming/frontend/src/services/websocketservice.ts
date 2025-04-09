@@ -8,6 +8,7 @@ export interface Idea {
   id: string;
   content: string;
   mediaType: string;
+  mediaURL?: string;
   submittedBy: User;
   ratings: IdeaRating[];
 }
@@ -42,6 +43,10 @@ export class WebSocketService {
   private socket: WebSocket | null = null;
   private username: string = '';
   private listeners: { [key: string]: ((data: any) => void)[] } = {};
+
+  getUsername(): string {
+    return this.username;
+  }
 
   connect(username: string): Promise<void> {
     this.username = username;
@@ -109,12 +114,12 @@ export class WebSocketService {
     });
   }
 
-  submitIdea(sessionId: string, content: string, mediaType?: string): void {
+  submitIdea(sessionId: string, content: string, mediaType: string = 'text', mediaURL?: string): void {
     this.sendMessage({
       type: 'idea_submission',
       sessionId: sessionId,
       username: this.username,
-      data: { content, mediaType },
+      data: { content, mediaType, mediaURL },
     });
   }
 
@@ -140,7 +145,7 @@ export class WebSocketService {
     });
   }
 
-  private sendMessage(message: Message): void {
+  sendMessage(message: Message): void {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
     } else {
