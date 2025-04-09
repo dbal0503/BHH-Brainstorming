@@ -255,3 +255,9 @@ button:hover {
   color: #000000;
   margin-bottom: 10px;
 }
+
+.username-display {
+  font-size: 22px;
+  color: #000000;
+  margin-bottom: 10px;
+} 
