@@ -25,7 +25,18 @@ const Session: React.FC = () => {
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
   const [discussionStarted, setDiscussionStarted] = useState(false);
 
+  const generateUsername = (): string => {
+    const letters = 'abcdefghijklmnopqrstuvwxyz';
+    let word = '';
+    for (let i = 0; i < 5; i++) {
+      word += letters.charAt(Math.floor(Math.random() * letters.length));
+    }
+    const numbers = Math.floor(Math.random() * 900 + 100); // Generates a number between 100 and 999
+    return word + numbers;
+  };
+
   useEffect(() => {
+    setUsername(generateUsername());
     websocketService.on('sessions_list', (data: React.SetStateAction<ISession[]>) => {
       setSessions(data);
     });
@@ -137,37 +148,34 @@ const Session: React.FC = () => {
     <div className="session-container">
       {!connected ? (
         <div className="login-container">
-          <h2>Enter Username</h2>
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <button onClick={handleConnect}>Connect</button>
+          <h2>Your Generated Username</h2>
+          <div className="username-display">
+            {username}
+          </div>
+          <button onClick={() => setUsername(generateUsername())}>Re-Generate Username</button>
+          <button onClick={handleConnect} style={{ marginTop: '10px' }}>Connect</button>
         </div>
       ) : (
         <>
           <h1 className="header">Welcome, {username}</h1>
           {/* Create Session Section */}
           {!currentSessionId && (
-          <div className="create-session">
-            <h2>Create Session</h2>
-            <input
-              type="text"
-              placeholder="Session Name"
-              value={sessionName}
-              onChange={(e) => setSessionName(e.target.value)}
-            />
-            <textarea
-              placeholder="Enter Guiding Questions (one per line)"
-              value={guidingQuestions}
-              onChange={(e) => setGuidingQuestions(e.target.value)}
-            ></textarea>
-            <button onClick={handleCreateSession}>Create Session</button>
-          </div>
-          )
-      }
+            <div className="create-session">
+              <h2>Create Session</h2>
+              <input
+                type="text"
+                placeholder="Session Name"
+                value={sessionName}
+                onChange={(e) => setSessionName(e.target.value)}
+              />
+              <textarea
+                placeholder="Enter Guiding Questions (one per line)"
+                value={guidingQuestions}
+                onChange={(e) => setGuidingQuestions(e.target.value)}
+              ></textarea>
+              <button onClick={handleCreateSession}>Create Session</button>
+            </div>
+          )}
 
           {/* If not in a session, show available sessions */}
           {!currentSessionId && (
@@ -196,10 +204,10 @@ const Session: React.FC = () => {
               <div className="current-session">
                 <h2>Current Session</h2>
                 <div className="session-info">
-                <p className="session-id-section">ID: <span className="session-id">{currentSessionId}</span></p>
-                <button className="leave-button" onClick={handleLeaveSession}>
-                  Leave
-                </button>
+                  <p className="session-id-section">ID: <span className="session-id">{currentSessionId}</span></p>
+                  <button className="leave-button" onClick={handleLeaveSession}>
+                    Leave
+                  </button>
                 </div>
               </div>
 
