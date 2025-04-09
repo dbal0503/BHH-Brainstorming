@@ -1,0 +1,115 @@
+/* Base layout */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f7f9fc;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Container for the entire session component */
+  .session-container {
+    max-width: 800px;
+    margin: 40px auto;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  
+  /* Headers */
+  .header,
+  h2 {
+    color: #333333;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Login Container */
+  .login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  /* Create Session and other sections styling */
+  .create-session,
+  .available-sessions,
+  .chat-section {
+    margin-bottom: 30px;
+    padding: 0 20px;
+  }
+  
+  /* Input fields styling */
+  input[type="text"],
+  input {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+  
+  /* Buttons styling */
+  button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Sessions list styling */
+  .session-list ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .session-list li {
+    border-bottom: 1px solid #e1e4e8;
+    padding: 12px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .session-list li span {
+    flex: 1;
+    margin-right: 15px;
+  }
+  
+  /* Chat container */
+  .chat-container {
+    border: 1px solid #e1e4e8;
+    border-radius: 4px;
+    height: 300px;
+    overflow-y: auto;
+    padding: 15px;
+    background-color: #fafafa;
+  }
+  
+  /* Chat message styling */
+  .chat-message {
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  
+  .chat-input-group {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .chat-input-group input {
+    flex-grow: 1;
+    margin-bottom: 0;
+  }
+  

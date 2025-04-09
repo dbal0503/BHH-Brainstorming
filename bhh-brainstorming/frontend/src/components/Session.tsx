@@ -1,6 +1,6 @@
-// src/components/Session.tsx
 import React, { useState, useEffect } from 'react';
 import { websocketService, Session as SessionType, Message } from '../services/websocketservice';
+import './Session.css';
 
 const Session: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -26,7 +26,7 @@ const Session: React.FC = () => {
       setSessions((prev) => prev.map((s: SessionType) => (s.id === data.id ? data : s)));
     });
     websocketService.on('session_message', (data) => {
-      setMessages((prev) => [...prev, { type: 'session_message', data: data }]);
+      setMessages((prev) => [...prev, { type: 'session_message', data }]);
     });
 
     return () => {
@@ -64,51 +64,61 @@ const Session: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="session-container">
       {!connected ? (
-        <div>
+        <div className="login-container">
           <h2>Enter Username</h2>
-          <input value={username} onChange={(e) => setUsername(e.target.value)} />
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
           <button onClick={handleConnect}>Connect</button>
         </div>
       ) : (
         <>
-          <h1>BHH-Brainstorming Frontend</h1>
-          <div style={{ margin: '20px 0' }}>
+          <h1 className="header">BHH-Brainstorming Frontend</h1>
+          <div className="create-session">
             <h2>Create Session</h2>
             <input
+              type="text"
               placeholder="Session Name"
               value={sessionName}
               onChange={(e) => setSessionName(e.target.value)}
             />
             <button onClick={handleCreateSession}>Create Session</button>
           </div>
-          <div style={{ margin: '20px 0' }}>
+          <div className="available-sessions">
             <h2>Available Sessions</h2>
             {sessions.length === 0 && <p>No sessions available.</p>}
-            <ul>
-              {sessions.map((session) => (
-                <li key={session.id}>
-                  <strong>{session.name}</strong> (ID: {session.id}) - Created by {session.creator.username}
-                  <button onClick={() => handleJoinSession(session.id)}>Join</button>
-                </li>
-              ))}
-            </ul>
+            <div className="session-list">
+              <ul>
+                {sessions.map((session) => (
+                  <li key={session.id}>
+                    <span>
+                      <strong>{session.name}</strong> (ID: {session.id}) - Created by {session.creator.username}
+                    </span>
+                    <button onClick={() => handleJoinSession(session.id)}>Join</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
           {currentSessionId && (
-            <div style={{ margin: '20px 0' }}>
+            <div className="chat-section">
               <h2>Session Chat (Session ID: {currentSessionId})</h2>
-              <div style={{ border: '1px solid #ccc', padding: '10px', height: '300px', overflowY: 'scroll' }}>
+              <div className="chat-container">
                 {messages.map((msg, index) => (
-                  <div key={index}>
+                  <div key={index} className="chat-message">
                     <strong>{msg.username ? `${msg.username}: ` : ''}</strong>
                     <span>{msg.data}</span>
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: '10px' }}>
+              <div className="chat-input-group">
                 <input
-                  style={{ width: '80%' }}
+                  type="text"
                   placeholder="Type a message"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
