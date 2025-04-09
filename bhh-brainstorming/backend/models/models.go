@@ -6,26 +6,26 @@ import (
 )
 
 type User struct {
-	ID string `json:"id"`
+	ID       string `json:"id"`
 	Username string `json:"username"`
 }
 
 type Session struct {
-	ID string `json:"id"`
-	Name string `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	Creator User `json:"creator"`
-	Users map[string]*User `json:"users"`
-	mutex sync.RWMutex
+	ID        string           `json:"id"`
+	Name      string           `json:"name"`
+	CreatedAt time.Time        `json:"created_at"`
+	Creator   User             `json:"creator"`
+	Users     map[string]*User `json:"users"`
+	mutex     sync.RWMutex
 }
 
 func NewSession(id string, name string, creator User) *Session {
 	return &Session{
-		ID: id,
-		Name: name,
+		ID:        id,
+		Name:      name,
 		CreatedAt: time.Now(),
-		Creator: creator,
-		Users: map[string]*User{creator.ID: &creator},
+		Creator:   creator,
+		Users:     map[string]*User{creator.ID: &creator},
 	}
 }
 
@@ -34,7 +34,6 @@ func (s *Session) AddUser(user User) {
 	defer s.mutex.Unlock()
 	s.Users[user.ID] = &user
 }
-
 
 func (s *Session) RemoveUser(userID string) {
 	s.mutex.Lock()
@@ -51,4 +50,3 @@ func (s *Session) GetUsers() []*User {
 	}
 	return users
 }
-
