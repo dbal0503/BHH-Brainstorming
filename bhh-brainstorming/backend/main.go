@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"bhh-brainstorming/backend/websocket" // Adjust the import path as necessary.
+	"bhh-brainstorming/backend/websocket"
 )
 
 func main() {
