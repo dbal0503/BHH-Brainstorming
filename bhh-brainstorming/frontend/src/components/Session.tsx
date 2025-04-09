@@ -33,7 +33,7 @@ const Session: React.FC = () => {
       setCurrentSessionId(data.id);
       setSessions((prev: ISession[]) => [data, ...prev.filter((s) => s.id !== data.id)]);
     });
-    websocketService.on('session_joined', (data: { id: React.SetStateAction<string>; }) => {
+    websocketService.on('session_joined', (data: { id: React.SetStateAction<string> }) => {
       setCurrentSessionId(data.id);
     });
     websocketService.on('session_updated', (data: ISession) => {
@@ -89,6 +89,16 @@ const Session: React.FC = () => {
     websocketService.joinSession(sessionId);
   };
 
+  const handleLeaveSession = () => {
+    if (currentSessionId) {
+      websocketService.leaveSession();
+      setCurrentSessionId('');
+      setAggregatedResult('');
+      setDiscussionStarted(false);
+      setChatMessages([]);
+    }
+  };
+
   const handleSendChat = () => {
     if (currentSessionId && inputMessage.trim() !== '') {
       websocketService.sendSessionMessage(currentSessionId, inputMessage);
@@ -98,7 +108,7 @@ const Session: React.FC = () => {
 
   const handleSubmitIdea = () => {
     if (currentSessionId && ideaContent.trim() !== '') {
-      websocketService.submitIdea(currentSessionId, ideaContent, "text");
+      websocketService.submitIdea(currentSessionId, ideaContent, 'text');
       setIdeaContent('');
     }
   };
@@ -138,7 +148,8 @@ const Session: React.FC = () => {
         </div>
       ) : (
         <>
-          <h1 className="header">BHH-Brainstorming Frontend</h1>
+          <h1 className="header">Welcome, {username}</h1>
+          {/* Create Session Section */}
           <div className="create-session">
             <h2>Create Session</h2>
             <input
@@ -154,108 +165,147 @@ const Session: React.FC = () => {
             ></textarea>
             <button onClick={handleCreateSession}>Create Session</button>
           </div>
-          <div className="available-sessions">
-            <h2>Available Sessions</h2>
-            {sessions.length === 0 && <p>No sessions available.</p>}
-            <div className="session-list">
-              <ul>
-                {sessions.map((session) => (
-                  <li key={session.id}>
-                    <span>
-                      <strong>{session.name}</strong> (ID: {session.id}) - Created by {session.creator.username}
-                    </span>
-                    <button onClick={() => handleJoinSession(session.id)}>Join</button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          {currentSessionId && (
-            <div className="chat-section">
-              <h2>Session Chat (Session ID: {currentSessionId})</h2>
-              <div className="guiding-questions">
-                <h3>Guiding Questions:</h3>
+
+          {/* If not in a session, show available sessions */}
+          {!currentSessionId && (
+            <div className="available-sessions">
+              <h2>Available Sessions</h2>
+              {sessions.length === 0 && <p>No sessions available.</p>}
+              <div className="session-list">
                 <ul>
-                  {sessions.find((s) => s.id === currentSessionId)?.guidingQuestions.map((q: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined, idx: React.Key | null | undefined) => (
-                    <li key={idx}>{q}</li>
+                  {sessions.map((session) => (
+                    <li key={session.id}>
+                      <span>
+                        <strong>{session.name}</strong> (ID: {session.id}) - Created by{' '}
+                        {session.creator.username}
+                      </span>
+                      <button onClick={() => handleJoinSession(session.id)}>Join</button>
+                    </li>
                   ))}
                 </ul>
               </div>
-              <div className="idea-submission">
-                <h3>Submit Your Idea</h3>
-                <textarea
-                  placeholder="Enter your idea here"
-                  value={ideaContent}
-                  onChange={(e) => setIdeaContent(e.target.value)}
-                ></textarea>
-                <button onClick={handleSubmitIdea}>Submit Idea</button>
-              </div>
-              <button onClick={handleAggregateIdeas}>Aggregate Ideas</button>
-              {aggregatedResult && (
-                <div className="aggregation-result">
-                  <h3>Aggregated Ideas:</h3>
-                  <p>{aggregatedResult}</p>
-                  <button onClick={handleStartDiscussion}>Start Discussion</button>
-                </div>
-              )}
-              {discussionStarted && (
-                <div className="discussion-chat">
-                  <h3>Group Discussion</h3>
-                  <div className="chat-container">
-                    {chatMessages.map((msg, index) => (
-                      <div key={index} className="chat-message">
-                        <strong>{msg.username ? `${msg.username}: ` : ''}</strong>
-                        <span>{msg.data}</span>
-                        <button onClick={() => setSelectedIdeaId(`idea-${index}`)}>Rate</button>
-                        {selectedIdeaId === `idea-${index}` && (
-                          <div className="rating-form">
-                            <input
-                              type="number"
-                              min="1"
-                              max="5"
-                              value={rating.novelty}
-                              onChange={(e) => setRating({ ...rating, novelty: Number(e.target.value) })}
-                              placeholder="Novelty"
-                            />
-                            <input
-                              type="number"
-                              min="1"
-                              max="5"
-                              value={rating.feasibility}
-                              onChange={(e) => setRating({ ...rating, feasibility: Number(e.target.value) })}
-                              placeholder="Feasibility"
-                            />
-                            <input
-                              type="number"
-                              min="1"
-                              max="5"
-                              value={rating.usefulness}
-                              onChange={(e) => setRating({ ...rating, usefulness: Number(e.target.value) })}
-                              placeholder="Usefulness"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Optional comment"
-                              onChange={(e) => setRating({ ...rating, comment: e.target.value })}
-                            />
-                            <button onClick={() => handleSubmitRating(`idea-${index}`)}>Submit Rating</button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="chat-input-group">
-                    <input
-                      type="text"
-                      placeholder="Type a message for discussion"
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                    />
-                    <button onClick={handleSendChat}>Send</button>
-                  </div>
-                </div>
-              )}
             </div>
+          )}
+
+          {/* If in a session, show current session info */}
+          {currentSessionId && (
+            <>
+              <div className="current-session">
+                <h2>Current Session</h2>
+                <p>{currentSessionId}</p>
+                <button className="leave-button" onClick={handleLeaveSession}>
+                  Leave
+                </button>
+              </div>
+
+              {/* Session Chat Section */}
+              <div className="chat-section">
+                <h2>Session Chat</h2>
+
+                <div className="guiding-questions">
+                  <h3>Guiding Questions</h3>
+                  <div className="guiding-question-list">
+                    {sessions
+                      .find((s) => s.id === currentSessionId)
+                      ?.guidingQuestions.map((q, idx) => (
+                        <div key={idx} className="guiding-question-item">
+                          {q}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                <div className="idea-submission">
+                  <h3>Submit Your Idea</h3>
+                  <textarea
+                    className="idea-textarea"
+                    placeholder="Enter your idea here"
+                    value={ideaContent}
+                    onChange={(e) => setIdeaContent(e.target.value)}
+                  ></textarea>
+                  <div className="submission-buttons">
+                    <button onClick={handleSubmitIdea}>Submit Idea</button>
+                    <button onClick={handleAggregateIdeas}>Aggregate Ideas</button>
+                  </div>
+                </div>
+
+                {aggregatedResult && (
+                  <div className="aggregation-result">
+                    <h3 className="aggregation-title">Brainstorm Summary</h3>
+                    <p>{aggregatedResult}</p>
+                    <button onClick={handleStartDiscussion}>Start Discussion</button>
+                  </div>
+                )}
+
+                {discussionStarted && (
+                  <div className="discussion-chat">
+                    <h3>Group Discussion</h3>
+                    <div className="chat-container">
+                      {chatMessages.map((msg, index) => (
+                        <div key={index} className="chat-message">
+                          <strong>{msg.username ? `${msg.username}: ` : ''}</strong>
+                          <span>{msg.data}</span>
+                          <button onClick={() => setSelectedIdeaId(`idea-${index}`)}>Rate</button>
+                          {selectedIdeaId === `idea-${index}` && (
+                            <div className="rating-form">
+                              <input
+                                type="number"
+                                min="1"
+                                max="5"
+                                value={rating.novelty}
+                                onChange={(e) =>
+                                  setRating({ ...rating, novelty: Number(e.target.value) })
+                                }
+                                placeholder="Novelty"
+                              />
+                              <input
+                                type="number"
+                                min="1"
+                                max="5"
+                                value={rating.feasibility}
+                                onChange={(e) =>
+                                  setRating({ ...rating, feasibility: Number(e.target.value) })
+                                }
+                                placeholder="Feasibility"
+                              />
+                              <input
+                                type="number"
+                                min="1"
+                                max="5"
+                                value={rating.usefulness}
+                                onChange={(e) =>
+                                  setRating({ ...rating, usefulness: Number(e.target.value) })
+                                }
+                                placeholder="Usefulness"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Optional comment"
+                                onChange={(e) =>
+                                  setRating({ ...rating, comment: e.target.value })
+                                }
+                              />
+                              <button onClick={() => handleSubmitRating(`idea-${index}`)}>
+                                Submit Rating
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="chat-input-group">
+                      <input
+                        type="text"
+                        placeholder="Type a message for discussion"
+                        value={inputMessage}
+                        onChange={(e) => setInputMessage(e.target.value)}
+                      />
+                      <button onClick={handleSendChat}>Send</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </>
       )}
