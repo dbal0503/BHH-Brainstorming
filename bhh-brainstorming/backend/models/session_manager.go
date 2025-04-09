@@ -29,8 +29,8 @@ func (sm *SessionManager) CreateSession(name string, creator User) *Session {
 	return session
 }
 
-func (sm *SessionManager) GetSession(sessionID string) (*Session, error){
-	sm.mutex.RLocker()
+func (sm *SessionManager) GetSession(sessionID string) (*Session, error) {
+	sm.mutex.RLock()
 	defer sm.mutex.RUnlock()
 	session, exists := sm.sessions[sessionID]
 	if !exists {
@@ -39,17 +39,17 @@ func (sm *SessionManager) GetSession(sessionID string) (*Session, error){
 	return session, nil
 }
 
-func (sm *SessionManager) ListSessions() []*Session{
+func (sm *SessionManager) ListSessions() []*Session {
 	sm.mutex.RLock()
 	defer sm.mutex.RUnlock()
 	sessions := make([]*Session, 0, len(sm.sessions))
-	for _, session := range sm.sessions{
+	for _, session := range sm.sessions {
 		sessions = append(sessions, session)
-		
+
 	}
 	return sessions
 }
-func (sm *SessionManager) RemoveSession(sessiondID string){
+func (sm *SessionManager) RemoveSession(sessiondID string) {
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
 	delete(sm.sessions, sessiondID)
