@@ -41,58 +41,82 @@ const Session: React.FC = () => {
 
   useEffect(() => {
     setUsername(generateUsername());
-    websocketService.on('sessions_list', (data: React.SetStateAction<ISession[]>) => {
+
+    const handleSessionsList = (data: ISession[]) => {
       setSessions(data);
-    });
-    websocketService.on('session_created', (data: ISession) => {
+    };
+
+    const handleSessionCreated = (data: ISession) => {
       setCurrentSessionId(data.id);
       setSessions((prev: ISession[]) => [data, ...prev.filter((s) => s.id !== data.id)]);
-    });
-    websocketService.on('session_joined', (data: { id: React.SetStateAction<string> }) => {
+    };
+
+    const handleSessionJoined = (data: { id: string }) => {
       setCurrentSessionId(data.id);
-    });
-    websocketService.on('session_updated', (data: ISession) => {
+    };
+
+    const handleSessionUpdated = (data: ISession) => {
       setSessions((prev: ISession[]) =>
         prev.map((s) => (s.id === data.id ? data : s))
       );
-    });
-    websocketService.on('session_message', (data: any) => {
-      setChatMessages((prev) => [...prev, { type: 'session_message', data }]);
-    });
-    websocketService.on('idea_submitted', (data: any) => {
-      setChatMessages((prev) => [...prev, { type: 'idea_submitted', data }]);
-    });
-    websocketService.on('aggregation_started', (data: any) => {
+    };
+
+    const handleSessionMessage = (data: any) => {
+      setChatMessages(prev => [...prev, { type: 'session_message', data }]);
+    };
+
+    const handleIdeaSubmitted = (data: any) => {
+      setChatMessages(prev => [...prev, { type: 'idea_submitted', data }]);
+    };
+
+    const handleAggregationStarted = (data: any) => {
       setIsAggregating(true);
-      setChatMessages((prev) => [...prev, { type: 'aggregation_started', data }]);
-    });
-    websocketService.on('aggregation_result', (data: React.SetStateAction<string>) => {
+      setChatMessages(prev => [...prev, { type: 'aggregation_started', data }]);
+    };
+
+    const handleAggregationResult = (data: string) => {
       setAggregatedResult(data);
       setIsAggregating(false);
-    });
-    websocketService.on('aggregation_error', (data: any) => {
+    };
+
+    const handleAggregationError = (data: any) => {
       setIsAggregating(false);
-      setChatMessages((prev) => [...prev, { type: 'error', data }]);
-    });
-    websocketService.on('idea_rating', (data: any) => {
+      setChatMessages(prev => [...prev, { type: 'error', data }]);
+    };
+
+    const handleIdeaRating = (data: any) => {
       console.log('Received idea rating:', data);
-    });
-    websocketService.on('discussion_started', (data: any) => {
+    };
+
+    const handleDiscussionStarted = (data: any) => {
       setDiscussionStarted(true);
-      setChatMessages((prev) => [...prev, { type: 'discussion', data }]);
-    });
+      setChatMessages(prev => [...prev, { type: 'discussion', data }]);
+    };
+
+    websocketService.on('sessions_list', handleSessionsList);
+    websocketService.on('session_created', handleSessionCreated);
+    websocketService.on('session_joined', handleSessionJoined);
+    websocketService.on('session_updated', handleSessionUpdated);
+    websocketService.on('session_message', handleSessionMessage);
+    websocketService.on('idea_submitted', handleIdeaSubmitted);
+    websocketService.on('aggregation_started', handleAggregationStarted);
+    websocketService.on('aggregation_result', handleAggregationResult);
+    websocketService.on('aggregation_error', handleAggregationError);
+    websocketService.on('idea_rating', handleIdeaRating);
+    websocketService.on('discussion_started', handleDiscussionStarted);
+
     return () => {
-      websocketService.off('sessions_list', () => {});
-      websocketService.off('session_created', () => {});
-      websocketService.off('session_joined', () => {});
-      websocketService.off('session_updated', () => {});
-      websocketService.off('session_message', () => {});
-      websocketService.off('idea_submitted', () => {});
-      websocketService.off('aggregation_started', () => {});
-      websocketService.off('aggregation_result', () => {});
-      websocketService.off('aggregation_error', () => {});
-      websocketService.off('idea_rating', () => {});
-      websocketService.off('discussion_started', () => {});
+      websocketService.off('sessions_list', handleSessionsList);
+      websocketService.off('session_created', handleSessionCreated);
+      websocketService.off('session_joined', handleSessionJoined);
+      websocketService.off('session_updated', handleSessionUpdated);
+      websocketService.off('session_message', handleSessionMessage);
+      websocketService.off('idea_submitted', handleIdeaSubmitted);
+      websocketService.off('aggregation_started', handleAggregationStarted);
+      websocketService.off('aggregation_result', handleAggregationResult);
+      websocketService.off('aggregation_error', handleAggregationError);
+      websocketService.off('idea_rating', handleIdeaRating);
+      websocketService.off('discussion_started', handleDiscussionStarted);
     };
   }, []);
 
@@ -164,12 +188,10 @@ const Session: React.FC = () => {
       {!connected ? (
         <div className="login-container">
           <h2>Your Generated Username</h2>
-          <div className="username-display">
-            {username}
-          </div>
+          <div className="username-display">{username}</div>
           <div className="joining-actions">
             <button onClick={() => setUsername(generateUsername())}>Re-Generate Username</button>
-            <button onClick={handleConnect} >Connect</button>
+            <button onClick={handleConnect}>Connect</button>
           </div>
         </div>
       ) : (
@@ -183,7 +205,7 @@ const Session: React.FC = () => {
                 placeholder="Session Name"
                 value={sessionName}
                 onChange={(e) => setSessionName(e.target.value)}
-                className='session-name-input'
+                className="session-name-input"
               />
               <textarea
                 placeholder="Enter Guiding Questions (one per line)"
@@ -193,7 +215,6 @@ const Session: React.FC = () => {
               <button onClick={handleCreateSession}>Create Session</button>
             </div>
           )}
-
           {!currentSessionId && (
             <div className="available-sessions">
               <h2>Available Sessions</h2>
@@ -203,8 +224,7 @@ const Session: React.FC = () => {
                   {sessions.map((session) => (
                     <li key={session.id}>
                       <span>
-                        <strong>{session.name}</strong> (ID: {session.id}) - Created by{' '}
-                        {session.creator.username}
+                        <strong>{session.name}</strong> (ID: {session.id}) - Created by {session.creator.username}
                       </span>
                       <button onClick={() => handleJoinSession(session.id)}>Join</button>
                     </li>
@@ -213,13 +233,14 @@ const Session: React.FC = () => {
               </div>
             </div>
           )}
-
           {currentSessionId && (
             <>
               <div className="current-session">
                 <h2>Current Session</h2>
                 <div className="session-info">
-                  <p className="session-id-section">ID: <span className="session-id">{currentSessionId}</span></p>
+                  <p className="session-id-section">
+                    ID: <span className="session-id">{currentSessionId}</span>
+                  </p>
                   <button className="leave-button" onClick={handleLeaveSession}>
                     Leave Session
                   </button>
@@ -237,18 +258,12 @@ const Session: React.FC = () => {
                   </div>
                 )}
               </div>
-
-              {/* Hide "Share Your Ideas" section once discussion has started */}
               {!discussionStarted && (
                 <div className="idea-submission">
                   <h3>Share Your Ideas</h3>
-                  <MediaUploader 
-                    onMediaUploaded={handleMediaUploaded}
-                    sessionId={currentSessionId}
-                  />
+                  <MediaUploader onMediaUploaded={handleMediaUploaded} sessionId={currentSessionId} />
                 </div>
               )}
-
               {currentSession && currentSession.ideas.length > 0 && !discussionStarted && (
                 <div className="ideas-section">
                   <h3>Ideas Shared:</h3>
@@ -258,13 +273,7 @@ const Session: React.FC = () => {
                         <div className="idea-header">
                           <span className="idea-author">{idea.submittedBy.username}</span>
                         </div>
-                        
-                        <MediaDisplay 
-                          mediaType={idea.mediaType}
-                          mediaURL={idea.mediaURL}
-                          content={idea.content}
-                        />
-                        
+                        <MediaDisplay mediaType={idea.mediaType} mediaURL={idea.mediaURL} content={idea.content} />
                         {!discussionStarted && selectedIdeaId === idea.id ? (
                           <div className="rating-form">
                             <h4>Rate this idea:</h4>
@@ -310,9 +319,7 @@ const Session: React.FC = () => {
                               <label>Comment (optional):</label>
                               <textarea
                                 value={rating.comment || ''}
-                                onChange={(e) =>
-                                  setRating({ ...rating, comment: e.target.value })
-                                }
+                                onChange={(e) => setRating({ ...rating, comment: e.target.value })}
                               ></textarea>
                             </div>
                             <div className="rating-actions">
@@ -322,10 +329,7 @@ const Session: React.FC = () => {
                           </div>
                         ) : (
                           !discussionStarted && (
-                            <button
-                              onClick={() => setSelectedIdeaId(idea.id)}
-                              className="rate-button"
-                            >
+                            <button onClick={() => setSelectedIdeaId(idea.id)} className="rate-button">
                               Rate this idea
                             </button>
                           )
@@ -335,25 +339,19 @@ const Session: React.FC = () => {
                   </div>
                 </div>
               )}
-
               <div className="aggregation-section">
                 {isAggregating && (
                   <div className="aggregating-message">
                     <p>Aggregating ideas... This may take a moment.</p>
                   </div>
                 )}
-                
-                {aggregatedResult && (
-                  <AggregationDisplay content={aggregatedResult} />
-                )}
-                
+                {aggregatedResult && <AggregationDisplay content={aggregatedResult} />}
                 {aggregatedResult && !discussionStarted && (
                   <button onClick={handleStartDiscussion} className="start-discussion">
                     Start Group Discussion
                   </button>
                 )}
               </div>
-
               {discussionStarted && (
                 <div className="discussion-section">
                   <h3>Group Discussion</h3>
