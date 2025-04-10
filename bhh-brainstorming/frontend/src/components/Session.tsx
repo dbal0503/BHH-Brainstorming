@@ -1,5 +1,4 @@
-// File: frontend/src/components/Session.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { websocketService, ISession, Message, Idea } from '../services/websocketservice';
 import MediaUploader from './MediaUploader';
 import MediaDisplay, { AggregationDisplay } from './MediaDisplay';
@@ -29,6 +28,12 @@ const Session: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
 
+  // Ref to always hold the latest currentSessionId
+  const currentSessionIdRef = useRef(currentSessionId);
+  useEffect(() => {
+    currentSessionIdRef.current = currentSessionId;
+  }, [currentSessionId]);
+
   const generateUsername = (): string => {
     const letters = 'abcdefghijklmnopqrstuvwxyz';
     let word = '';
@@ -37,6 +42,25 @@ const Session: React.FC = () => {
     }
     const numbers = Math.floor(Math.random() * 900 + 100);
     return word + numbers;
+  };
+
+  // Listener to update idea ratings in state when an idea rating message is received.
+  const handleIdeaRating = (data: any) => {
+    // Expect data to have ideaId and rating info.
+    setSessions(prev =>
+      prev.map(session =>
+        session.id === currentSessionIdRef.current
+          ? {
+              ...session,
+              ideas: session.ideas.map(idea =>
+                idea.id === data.ideaId
+                  ? { ...idea, ratings: [...idea.ratings, data.rating] }
+                  : idea
+              ),
+            }
+          : session
+      )
+    );
   };
 
   useEffect(() => {
@@ -48,7 +72,7 @@ const Session: React.FC = () => {
 
     const handleSessionCreated = (data: ISession) => {
       setCurrentSessionId(data.id);
-      setSessions((prev: ISession[]) => [data, ...prev.filter((s) => s.id !== data.id)]);
+      setSessions(prev => [data, ...prev.filter(s => s.id !== data.id)]);
     };
 
     const handleSessionJoined = (data: { id: string }) => {
@@ -56,17 +80,23 @@ const Session: React.FC = () => {
     };
 
     const handleSessionUpdated = (data: ISession) => {
-      setSessions((prev: ISession[]) =>
-        prev.map((s) => (s.id === data.id ? data : s))
-      );
+      setSessions(prev => prev.map(s => (s.id === data.id ? data : s)));
     };
 
     const handleSessionMessage = (data: any) => {
       setChatMessages(prev => [...prev, { type: 'session_message', data }]);
     };
 
-    const handleIdeaSubmitted = (data: any) => {
-      setChatMessages(prev => [...prev, { type: 'idea_submitted', data }]);
+    // When an idea is submitted, update the session's ideas array.
+    const handleIdeaSubmitted = (idea: any) => {
+      setSessions(prev =>
+        prev.map(session =>
+          session.id === currentSessionIdRef.current
+            ? { ...session, ideas: [...session.ideas, idea] }
+            : session
+        )
+      );
+      setChatMessages(prev => [...prev, { type: 'idea_submitted', data: idea }]);
     };
 
     const handleAggregationStarted = (data: any) => {
@@ -84,10 +114,6 @@ const Session: React.FC = () => {
       setChatMessages(prev => [...prev, { type: 'error', data }]);
     };
 
-    const handleIdeaRating = (data: any) => {
-      console.log('Received idea rating:', data);
-    };
-
     const handleDiscussionStarted = (data: any) => {
       setDiscussionStarted(true);
       setChatMessages(prev => [...prev, { type: 'discussion', data }]);
@@ -102,8 +128,8 @@ const Session: React.FC = () => {
     websocketService.on('aggregation_started', handleAggregationStarted);
     websocketService.on('aggregation_result', handleAggregationResult);
     websocketService.on('aggregation_error', handleAggregationError);
-    websocketService.on('idea_rating', handleIdeaRating);
     websocketService.on('discussion_started', handleDiscussionStarted);
+    websocketService.on('idea_rating', handleIdeaRating);
 
     return () => {
       websocketService.off('sessions_list', handleSessionsList);
@@ -115,22 +141,20 @@ const Session: React.FC = () => {
       websocketService.off('aggregation_started', handleAggregationStarted);
       websocketService.off('aggregation_result', handleAggregationResult);
       websocketService.off('aggregation_error', handleAggregationError);
-      websocketService.off('idea_rating', handleIdeaRating);
       websocketService.off('discussion_started', handleDiscussionStarted);
+      websocketService.off('idea_rating', handleIdeaRating);
     };
   }, []);
 
   const handleConnect = () => {
     if (username.trim() !== '') {
-      websocketService.connect(username).then(() => {
-        setConnected(true);
-      });
+      websocketService.connect(username).then(() => setConnected(true));
     }
   };
 
   const handleCreateSession = () => {
     if (sessionName.trim() !== '' && guidingQuestions.trim() !== '') {
-      const questions = guidingQuestions.split('\n').filter((q) => q.trim() !== '');
+      const questions = guidingQuestions.split('\n').filter(q => q.trim() !== '');
       websocketService.createSession(sessionName, questions);
     }
   };
@@ -181,7 +205,23 @@ const Session: React.FC = () => {
     }
   };
 
-  const currentSession = sessions.find((session) => session.id === currentSessionId);
+  const currentSession = sessions.find(session => session.id === currentSessionId);
+  const selectedIdea = currentSession?.ideas.find(idea => idea.id === selectedIdeaId);
+
+  // Compute average ratings and collate comments for selected idea.
+  let averageNovelty = 0,
+    averageFeasibility = 0,
+    averageUsefulness = 0;
+  let allComments: string[] = [];
+  if (selectedIdea && selectedIdea.ratings && selectedIdea.ratings.length > 0) {
+    const ratingsArr = selectedIdea.ratings;
+    averageNovelty = ratingsArr.reduce((sum, r) => sum + r.novelty, 0) / ratingsArr.length;
+    averageFeasibility = ratingsArr.reduce((sum, r) => sum + r.feasibility, 0) / ratingsArr.length;
+    averageUsefulness = ratingsArr.reduce((sum, r) => sum + r.usefulness, 0) / ratingsArr.length;
+    allComments = ratingsArr
+      .filter(r => r.comment && r.comment.trim() !== '')
+      .map(r => r.comment as string);
+  }
 
   return (
     <div className="session-container">
@@ -204,13 +244,13 @@ const Session: React.FC = () => {
                 type="text"
                 placeholder="Session Name"
                 value={sessionName}
-                onChange={(e) => setSessionName(e.target.value)}
+                onChange={e => setSessionName(e.target.value)}
                 className="session-name-input"
               />
               <textarea
                 placeholder="Enter Guiding Questions (one per line)"
                 value={guidingQuestions}
-                onChange={(e) => setGuidingQuestions(e.target.value)}
+                onChange={e => setGuidingQuestions(e.target.value)}
               ></textarea>
               <button onClick={handleCreateSession}>Create Session</button>
             </div>
@@ -218,19 +258,20 @@ const Session: React.FC = () => {
           {!currentSessionId && (
             <div className="available-sessions">
               <h2>Available Sessions</h2>
-              {sessions.length === 0 && <p>No sessions available.</p>}
-              <div className="session-list">
-                <ul>
-                  {sessions.map((session) => (
-                    <li key={session.id}>
-                      <span>
-                        <strong>{session.name}</strong> (ID: {session.id}) - Created by {session.creator.username}
-                      </span>
-                      <button onClick={() => handleJoinSession(session.id)}>Join</button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {sessions.length === 0 ? <p>No sessions available.</p> : (
+                <div className="session-list">
+                  <ul>
+                    {sessions.map(session => (
+                      <li key={session.id}>
+                        <span>
+                          <strong>{session.name}</strong> (ID: {session.id}) - Created by {session.creator.username}
+                        </span>
+                        <button onClick={() => handleJoinSession(session.id)}>Join</button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
           {currentSessionId && (
@@ -238,21 +279,15 @@ const Session: React.FC = () => {
               <div className="current-session">
                 <h2>Current Session</h2>
                 <div className="session-info">
-                  <p className="session-id-section">
-                    ID: <span className="session-id">{currentSessionId}</span>
-                  </p>
-                  <button className="leave-button" onClick={handleLeaveSession}>
-                    Leave Session
-                  </button>
+                  <p className="session-id-section">ID: <span className="session-id">{currentSessionId}</span></p>
+                  <button className="leave-button" onClick={handleLeaveSession}>Leave Session</button>
                 </div>
                 {currentSession && (
                   <div className="guiding-questions">
                     <h3>Guiding Questions</h3>
                     <div className="guiding-question-list">
                       {currentSession.guidingQuestions.map((q, idx) => (
-                        <div key={idx} className="guiding-question-item">
-                          {q}
-                        </div>
+                        <div key={idx} className="guiding-question-item">{q}</div>
                       ))}
                     </div>
                   </div>
@@ -264,79 +299,26 @@ const Session: React.FC = () => {
                   <MediaUploader onMediaUploaded={handleMediaUploaded} sessionId={currentSessionId} />
                 </div>
               )}
-              {currentSession && currentSession.ideas.length > 0 && !discussionStarted && (
+              {currentSession && (
                 <div className="ideas-section">
                   <h3>Ideas Shared:</h3>
-                  <div className="ideas-list">
-                    {currentSession.ideas.map((idea: Idea) => (
-                      <div className="idea-card" key={idea.id}>
-                        <div className="idea-header">
-                          <span className="idea-author">{idea.submittedBy.username}</span>
-                        </div>
-                        <MediaDisplay mediaType={idea.mediaType} mediaURL={idea.mediaURL} content={idea.content} />
-                        {!discussionStarted && selectedIdeaId === idea.id ? (
-                          <div className="rating-form">
-                            <h4>Rate this idea:</h4>
-                            <div className="rating-sliders">
-                              <div className="rating-item">
-                                <label>Novelty: {rating.novelty}</label>
-                                <input
-                                  type="range"
-                                  min="1"
-                                  max="5"
-                                  value={rating.novelty}
-                                  onChange={(e) =>
-                                    setRating({ ...rating, novelty: parseInt(e.target.value) })
-                                  }
-                                />
-                              </div>
-                              <div className="rating-item">
-                                <label>Feasibility: {rating.feasibility}</label>
-                                <input
-                                  type="range"
-                                  min="1"
-                                  max="5"
-                                  value={rating.feasibility}
-                                  onChange={(e) =>
-                                    setRating({ ...rating, feasibility: parseInt(e.target.value) })
-                                  }
-                                />
-                              </div>
-                              <div className="rating-item">
-                                <label>Usefulness: {rating.usefulness}</label>
-                                <input
-                                  type="range"
-                                  min="1"
-                                  max="5"
-                                  value={rating.usefulness}
-                                  onChange={(e) =>
-                                    setRating({ ...rating, usefulness: parseInt(e.target.value) })
-                                  }
-                                />
-                              </div>
-                            </div>
-                            <div className="rating-comment">
-                              <label>Comment (optional):</label>
-                              <textarea
-                                value={rating.comment || ''}
-                                onChange={(e) => setRating({ ...rating, comment: e.target.value })}
-                              ></textarea>
-                            </div>
-                            <div className="rating-actions">
-                              <button onClick={() => handleSubmitRating(idea.id)}>Submit Rating</button>
-                              <button onClick={() => setSelectedIdeaId(null)}>Cancel</button>
-                            </div>
+                  {currentSession.ideas.length > 0 ? (
+                    <div className="ideas-list">
+                      {currentSession.ideas.map((idea: Idea) => (
+                        <div key={idea.id}
+                          className="idea-card"
+                          onClick={() => setSelectedIdeaId(idea.id)}
+                        >
+                          <MediaDisplay mediaType={idea.mediaType} mediaURL={idea.mediaURL} content={idea.content} />
+                          <div className="vote-hint">
+                            {discussionStarted ? "Click to view details" : "Hover & click to vote"}
                           </div>
-                        ) : (
-                          !discussionStarted && (
-                            <button onClick={() => setSelectedIdeaId(idea.id)} className="rate-button">
-                              Rate this idea
-                            </button>
-                          )
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>No ideas have been submitted yet.</p>
+                  )}
                 </div>
               )}
               <div className="aggregation-section">
@@ -387,7 +369,7 @@ const Session: React.FC = () => {
                   <div className="chat-panel">
                     <div className="chat-messages">
                       {chatMessages
-                        .filter((msg) => msg.type === 'session_message')
+                        .filter(msg => msg.type === 'session_message')
                         .map((msg, idx) => (
                           <div key={idx} className="chat-message">
                             <strong>{msg.username || 'Anonymous'}:</strong> {msg.data}
@@ -398,12 +380,107 @@ const Session: React.FC = () => {
                       <input
                         type="text"
                         value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
+                        onChange={e => setInputMessage(e.target.value)}
                         placeholder="Type your message..."
-                        onKeyPress={(e) => e.key === 'Enter' && handleSendChat()}
+                        onKeyPress={e => e.key === 'Enter' && handleSendChat()}
                       />
                       <button onClick={handleSendChat}>Send</button>
                     </div>
+                  </div>
+                </div>
+              )}
+              {/* Voting / Details Modal */}
+              {selectedIdeaId && (
+                <div className="modal-overlay" onClick={() => setSelectedIdeaId(null)}>
+                  <div className="modal" onClick={e => e.stopPropagation()}>
+                    {discussionStarted ? (
+                      <div className="idea-details">
+                        <h3>Idea Details</h3>
+                        {selectedIdea ? (
+                          <>
+                            <div className="rating-summary">
+                              <div className="details-bar">
+                                <div className="details-bar-inner" style={{ width: `${(averageNovelty/5)*100}%` }}>
+                                  Novelty: {averageNovelty.toFixed(1)}
+                                </div>
+                              </div>
+                              <div className="details-bar">
+                                <div className="details-bar-inner" style={{ width: `${(averageFeasibility/5)*100}%` }}>
+                                  Feasibility: {averageFeasibility.toFixed(1)}
+                                </div>
+                              </div>
+                              <div className="details-bar">
+                                <div className="details-bar-inner" style={{ width: `${(averageUsefulness/5)*100}%` }}>
+                                  Usefulness: {averageUsefulness.toFixed(1)}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="comments-section">
+                              <h4>Comments</h4>
+                              {allComments.length > 0 ? (
+                                <ul>
+                                  {allComments.map((comment, idx) => (
+                                    <li key={idx}>{comment}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p>No comments available.</p>
+                              )}
+                            </div>
+                            <button onClick={() => setSelectedIdeaId(null)}>Close</button>
+                          </>
+                        ) : (
+                          <p>Idea not found.</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="rating-form">
+                        <h3>Vote on Idea</h3>
+                        <div className="rating-item">
+                          <label>Novelty: {rating.novelty}</label>
+                          <input
+                            type="range"
+                            min="1"
+                            max="5"
+                            value={rating.novelty}
+                            onChange={e => setRating({ ...rating, novelty: parseInt(e.target.value) })}
+                          />
+                        </div>
+                        <div className="rating-item">
+                          <label>Feasibility: {rating.feasibility}</label>
+                          <input
+                            type="range"
+                            min="1"
+                            max="5"
+                            value={rating.feasibility}
+                            onChange={e => setRating({ ...rating, feasibility: parseInt(e.target.value) })}
+                          />
+                        </div>
+                        <div className="rating-item">
+                          <label>Usefulness: {rating.usefulness}</label>
+                          <input
+                            type="range"
+                            min="1"
+                            max="5"
+                            value={rating.usefulness}
+                            onChange={e => setRating({ ...rating, usefulness: parseInt(e.target.value) })}
+                          />
+                        </div>
+                        <div className="rating-comment">
+                          <label>Comment (optional):</label>
+                          <textarea
+                            value={rating.comment || ''}
+                            onChange={e => setRating({ ...rating, comment: e.target.value })}
+                          ></textarea>
+                        </div>
+                        <div className="modal-actions">
+                          <button onClick={() => selectedIdeaId && handleSubmitRating(selectedIdeaId)}>
+                            Send Vote
+                          </button>
+                          <button onClick={() => setSelectedIdeaId(null)}>Cancel</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
