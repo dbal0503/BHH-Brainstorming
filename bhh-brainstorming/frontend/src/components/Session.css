@@ -260,3 +260,61 @@ button:hover {
   color: #000000;
   margin-bottom: 10px;
 } 
+
+.voice-call-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #e9f2fb;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.voice-call-label {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #043f75;
+}
+
+.call-icons {
+  display: flex;
+  gap: 10px;
+}
+
+.mute-button, .deafen-button {
+  padding: 5px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.mute-button:hover, .deafen-button:hover {
+  transform: scale(1.1);
+}
+
+.discussion-section {
+  margin-top: 20px;
+}
+
+.chat-panel {
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  padding: 15px;
+  background-color: #fafafa;
+}
+
+.chat-messages {
+  height: 300px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.voice-call-status {
+  font-size: 1.2rem;
+  color: #005507;
+  opacity: 0.8;
+  text-align: center;
+  margin-top: 10px;
+}

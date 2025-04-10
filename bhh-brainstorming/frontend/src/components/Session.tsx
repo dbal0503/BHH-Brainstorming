@@ -25,6 +25,7 @@ const Session: React.FC = () => {
   const [rating, setRating] = useState<Rating>({ novelty: 1, feasibility: 1, usefulness: 1 });
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
   const [discussionStarted, setDiscussionStarted] = useState(false);
+  const [isAggregating, setIsAggregating] = useState(false);
 
   const generateUsername = (): string => {
     const letters = 'abcdefghijklmnopqrstuvwxyz';
@@ -32,10 +33,9 @@ const Session: React.FC = () => {
     for (let i = 0; i < 5; i++) {
       word += letters.charAt(Math.floor(Math.random() * letters.length));
     }
-    const numbers = Math.floor(Math.random() * 900 + 100); // Generates a number between 100 and 999
+    const numbers = Math.floor(Math.random() * 900 + 100);
     return word + numbers;
   };
-  const [isAggregating, setIsAggregating] = useState(false);
 
   useEffect(() => {
     setUsername(generateUsername());
@@ -132,7 +132,6 @@ const Session: React.FC = () => {
   };
 
   const handleMediaUploaded = (mediaType: string, mediaURL: string, content: string) => {
-    // This function is now handled by the MediaUploader component
     console.log('Media uploaded:', { mediaType, mediaURL, content });
   };
 
@@ -156,7 +155,6 @@ const Session: React.FC = () => {
     }
   };
 
-  // Get the current session object
   const currentSession = sessions.find((session) => session.id === currentSessionId);
 
   return (
@@ -173,7 +171,6 @@ const Session: React.FC = () => {
       ) : (
         <>
           <h1 className="header">Welcome, {username}</h1>
-          {/* Create Session Section */}
           {!currentSessionId && (
             <div className="create-session">
               <h2>Create Session</h2>
@@ -192,7 +189,6 @@ const Session: React.FC = () => {
             </div>
           )}
 
-          {/* If not in a session, show available sessions */}
           {!currentSessionId && (
             <div className="available-sessions">
               <h2>Available Sessions</h2>
@@ -213,7 +209,6 @@ const Session: React.FC = () => {
             </div>
           )}
 
-          {/* If in a session, show current session info */}
           {currentSessionId && (
             <>
               <div className="current-session">
@@ -226,31 +221,30 @@ const Session: React.FC = () => {
                 </div>
                 {currentSession && (
                   <div className="guiding-questions">
-                  <h3>Guiding Questions</h3>
-                  <div className="guiding-question-list">
-                    {sessions
-                      .find((s) => s.id === currentSessionId)
-                      ?.guidingQuestions.map((q, idx) => (
+                    <h3>Guiding Questions</h3>
+                    <div className="guiding-question-list">
+                      {currentSession.guidingQuestions.map((q, idx) => (
                         <div key={idx} className="guiding-question-item">
                           {q}
                         </div>
                       ))}
+                    </div>
                   </div>
-                </div>
                 )}
               </div>
 
-              {/* Idea submission section with media upload */}
-              <div className="idea-submission">
-                <h3>Share Your Ideas</h3>
-                <MediaUploader 
-                  onMediaUploaded={handleMediaUploaded}
-                  sessionId={currentSessionId}
-                />
-              </div>
+              {/* Hide "Share Your Ideas" section once discussion has started */}
+              {!discussionStarted && (
+                <div className="idea-submission">
+                  <h3>Share Your Ideas</h3>
+                  <MediaUploader 
+                    onMediaUploaded={handleMediaUploaded}
+                    sessionId={currentSessionId}
+                  />
+                </div>
+              )}
 
-              {/* Ideas display section */}
-              {currentSession && currentSession.ideas.length > 0 && (
+              {currentSession && currentSession.ideas.length > 0 && !discussionStarted && (
                 <div className="ideas-section">
                   <h3>Ideas Shared:</h3>
                   <div className="ideas-list">
@@ -266,7 +260,6 @@ const Session: React.FC = () => {
                           content={idea.content}
                         />
                         
-                        {/* Rating interface */}
                         {!discussionStarted && selectedIdeaId === idea.id ? (
                           <div className="rating-form">
                             <h4>Rate this idea:</h4>
@@ -338,7 +331,6 @@ const Session: React.FC = () => {
                 </div>
               )}
 
-              {/* Aggregation section */}
               <div className="aggregation-section">
                 {isAggregating && (
                   <div className="aggregating-message">
@@ -356,28 +348,49 @@ const Session: React.FC = () => {
                   </button>
                 )}
               </div>
-              {/* Discussion section */}
+
               {discussionStarted && (
                 <div className="discussion-section">
                   <h3>Group Discussion</h3>
-                  <div className="chat-messages">
-                    {chatMessages
-                      .filter((msg) => msg.type === 'session_message')
-                      .map((msg, idx) => (
-                        <div key={idx} className="chat-message">
-                          <strong>{msg.username || 'Anonymous'}:</strong> {msg.data}
-                        </div>
-                      ))}
+                  <div className="voice-call-bar">
+                    <span className="voice-call-label">Voice Call · <span className="voice-call-status">Connected</span></span>
+                    <div className="call-icons">
+                      <button className="mute-button" title="Mute">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polygon points="5,9 9,9 13,5 13,19 9,15 5,15"></polygon>
+                          <line x1="16" y1="9" x2="21" y2="14"></line>
+                          <line x1="21" y1="9" x2="16" y2="14"></line>
+                        </svg>
+                      </button>
+                      <button className="deafen-button" title="Deafen">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M4 9v6c0 2.21 1.79 4 4 4h2"></path>
+                          <path d="M14 9v6c0 2.21-1.79 4-4 4"></path>
+                          <line x1="18" y1="4" x2="18" y2="20"></line>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <div className="chat-input">
-                    <input
-                      type="text"
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      placeholder="Type your message..."
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendChat()}
-                    />
-                    <button onClick={handleSendChat}>Send</button>
+                  <div className="chat-panel">
+                    <div className="chat-messages">
+                      {chatMessages
+                        .filter((msg) => msg.type === 'session_message')
+                        .map((msg, idx) => (
+                          <div key={idx} className="chat-message">
+                            <strong>{msg.username || 'Anonymous'}:</strong> {msg.data}
+                          </div>
+                        ))}
+                    </div>
+                    <div className="chat-input">
+                      <input
+                        type="text"
+                        value={inputMessage}
+                        onChange={(e) => setInputMessage(e.target.value)}
+                        placeholder="Type your message..."
+                        onKeyPress={(e) => e.key === 'Enter' && handleSendChat()}
+                      />
+                      <button onClick={handleSendChat}>Send</button>
+                    </div>
                   </div>
                 </div>
               )}
