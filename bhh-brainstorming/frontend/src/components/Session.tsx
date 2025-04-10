@@ -226,13 +226,17 @@ const Session: React.FC = () => {
                 </div>
                 {currentSession && (
                   <div className="guiding-questions">
-                    <h3>Guiding Questions:</h3>
-                    <ul>
-                      {currentSession.guidingQuestions.map((q, idx) => (
-                        <li key={idx}>{q}</li>
+                  <h3>Guiding Questions</h3>
+                  <div className="guiding-question-list">
+                    {sessions
+                      .find((s) => s.id === currentSessionId)
+                      ?.guidingQuestions.map((q, idx) => (
+                        <div key={idx} className="guiding-question-item">
+                          {q}
+                        </div>
                       ))}
-                    </ul>
                   </div>
+                </div>
                 )}
               </div>
 
