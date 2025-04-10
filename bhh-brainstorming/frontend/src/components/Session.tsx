@@ -258,7 +258,9 @@ const Session: React.FC = () => {
           {!currentSessionId && (
             <div className="available-sessions">
               <h2>Available Sessions</h2>
-              {sessions.length === 0 ? <p>No sessions available.</p> : (
+              {sessions.length === 0 ? (
+                <p>No sessions available.</p>
+              ) : (
                 <div className="session-list">
                   <ul>
                     {sessions.map(session => (
@@ -279,15 +281,21 @@ const Session: React.FC = () => {
               <div className="current-session">
                 <h2>Current Session</h2>
                 <div className="session-info">
-                  <p className="session-id-section">ID: <span className="session-id">{currentSessionId}</span></p>
-                  <button className="leave-button" onClick={handleLeaveSession}>Leave Session</button>
+                  <p className="session-id-section">
+                    ID: <span className="session-id">{currentSessionId}</span>
+                  </p>
+                  <button className="leave-button" onClick={handleLeaveSession}>
+                    Leave Session
+                  </button>
                 </div>
                 {currentSession && (
                   <div className="guiding-questions">
                     <h3>Guiding Questions</h3>
                     <div className="guiding-question-list">
                       {currentSession.guidingQuestions.map((q, idx) => (
-                        <div key={idx} className="guiding-question-item">{q}</div>
+                        <div key={idx} className="guiding-question-item">
+                          {q}
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -303,18 +311,21 @@ const Session: React.FC = () => {
                 <div className="ideas-section">
                   <h3>Ideas Shared:</h3>
                   {currentSession.ideas.length > 0 ? (
-                    <div className="ideas-list">
-                      {currentSession.ideas.map((idea: Idea) => (
-                        <div key={idea.id}
-                          className="idea-card"
-                          onClick={() => setSelectedIdeaId(idea.id)}
-                        >
-                          <MediaDisplay mediaType={idea.mediaType} mediaURL={idea.mediaURL} content={idea.content} />
-                          <div className="vote-hint">
-                            {discussionStarted ? "Click to view details" : "Hover & click to vote"}
+                    <div className="ideas-list-container">
+                      <div className="ideas-list">
+                        {currentSession.ideas.map((idea: Idea) => (
+                          <div
+                            key={idea.id}
+                            className="idea-card"
+                            onClick={() => setSelectedIdeaId(idea.id)}
+                          >
+                            <MediaDisplay mediaType={idea.mediaType} mediaURL={idea.mediaURL} content={idea.content} />
+                            <div className="vote-hint">
+                              {discussionStarted ? "Click to view details" : "Hover & click to vote"}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   ) : (
                     <p>No ideas have been submitted yet.</p>
@@ -418,13 +429,13 @@ const Session: React.FC = () => {
                             <div className="comments-section">
                               <h4>Comments</h4>
                               {allComments.length > 0 ? (
-                                <ul>
+                                <div className="comments-container">
                                   {allComments.map((comment, idx) => (
-                                    <li key={idx}>{comment}</li>
+                                    <p key={idx} className="comment-item">{comment}</p>
                                   ))}
-                                </ul>
+                                </div>
                               ) : (
-                                <p>No comments available.</p>
+                                <p className="no-comments">No comments available.</p>
                               )}
                             </div>
                             <button onClick={() => setSelectedIdeaId(null)}>Close</button>

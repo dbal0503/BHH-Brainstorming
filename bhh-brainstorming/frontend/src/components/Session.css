@@ -67,7 +67,6 @@ h2 {
   margin: 0 auto 10px;
 }
 
-
 .create-session button {
   display: block;
   width: 80%;
@@ -200,7 +199,6 @@ h2 {
   transform: scale(1.1);
 }
 
-
 input[type='text'],
 input,
 textarea {
@@ -322,33 +320,14 @@ button:hover {
   margin-bottom: 10px;
 }
 
-.voice-call-status {
-  font-size: 1.2rem;
-  color: #005507;
-  opacity: 0.8;
-  text-align: center;
-  margin-top: 10px;
-}
-
-.joining-actions {
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-  justify-content: center;
-  align-items: center;
-}
-
-.idea-card {
-  border: 1px solid #d0d7de;
-  border-radius: 4px;
+/* Scrollable ideas section */
+.ideas-list-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e1e4e8;
   padding: 10px;
-  margin: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.idea-card:hover {
-  background-color: #f0f8ff;
+  border-radius: 4px;
+  background-color: #fafafa;
 }
 
 .vote-hint {
@@ -358,7 +337,7 @@ button:hover {
   margin-top: 8px;
 }
 
-
+/* Details bars in modal */
 .details-bar {
   background-color: #e1e4e8;
   border-radius: 4px;
@@ -378,17 +357,28 @@ button:hover {
 .idea-details {
   padding: 10px;
 }
+
 .comments-section {
   margin-top: 15px;
 }
-.comments-section ul {
-  list-style-type: disc;
-  padding-left: 20px;
+.comments-container {
+  /* Modern look: no bullets, clean spacing */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
-.comments-section li {
-  margin-bottom: 5px;
+.comment-item {
+  background-color: #f0f8ff;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+.no-comments {
+  font-style: italic;
+  color: #777;
 }
 
+/* Modal styling */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -416,4 +406,12 @@ button:hover {
   display: flex;
   justify-content: space-around;
   margin-top: 15px;
+}
+
+.joining-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
 }
