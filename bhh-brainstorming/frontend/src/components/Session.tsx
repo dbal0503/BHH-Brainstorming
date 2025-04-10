@@ -336,16 +336,6 @@ const Session: React.FC = () => {
 
               {/* Aggregation section */}
               <div className="aggregation-section">
-                {!aggregatedResult && !isAggregating && !discussionStarted && (
-                  <button
-                    onClick={handleAggregateIdeas}
-                    disabled={currentSession?.ideas.length === 0}
-                    className={currentSession?.ideas.length === 0 ? 'disabled' : ''}
-                  >
-                    Aggregate Ideas
-                  </button>
-                )}
-                
                 {isAggregating && (
                   <div className="aggregating-message">
                     <p>Aggregating ideas... This may take a moment.</p>
@@ -362,7 +352,6 @@ const Session: React.FC = () => {
                   </button>
                 )}
               </div>
-
               {/* Discussion section */}
               {discussionStarted && (
                 <div className="discussion-section">

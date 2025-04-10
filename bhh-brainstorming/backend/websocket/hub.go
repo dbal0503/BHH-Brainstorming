@@ -28,7 +28,7 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(512)
-	c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	c.conn.SetReadDeadline(time.Now().Add(180 * time.Second))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(60 * time.Second)); return nil })
 	for {
 		_, message, err := c.conn.ReadMessage()
@@ -337,6 +337,19 @@ func (h *Hub) handleIdeaSubmission(client *Client, message Message) {
 		Data: idea,
 	})
 	h.broadcastToSession(sessionID, response)
+
+	submittedUsers := make(map[string]bool)
+	for _, idea := range session.Ideas {
+		submittedUsers[idea.SubmittedBy.ID] = true
+	}
+
+	if len(submittedUsers) >= len(session.Users) {
+		aggregateMsg := Message{
+			Type:      "auto_aggregate",
+			SessionID: sessionID,
+		}
+		h.handleAggregateIdeas(client, aggregateMsg)
+	}
 }
 
 func (h *Hub) handleAggregateIdeas(client *Client, message Message) {
@@ -372,15 +385,18 @@ func (h *Hub) handleAggregateIdeas(client *Client, message Message) {
 	var items []struct {
 		MediaType string
 		MediaURL  string
+		Content   string
 	}
 
 	for _, idea := range session.Ideas {
 		items = append(items, struct {
 			MediaType string
 			MediaURL  string
+			Content   string
 		}{
 			MediaType: idea.MediaType,
 			MediaURL:  idea.MediaURL,
+			Content:   idea.Content,
 		})
 	}
 

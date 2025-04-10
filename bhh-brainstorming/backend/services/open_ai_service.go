@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 )
 
 type OpenAIService struct {
@@ -50,7 +51,13 @@ func CreateAPIRequest(mediaType string, mediaURL string) (APIRequest, error) {
 	return APIRequest{}, errors.New("invalid media type")
 }
 
-func (o *OpenAIService) ProcessMedia(mediaType string, mediaURL string) (string, error) {
+func (o *OpenAIService) ProcessMedia(mediaType string, mediaURL string, content string) (string, error) {
+	// If it's text type and we have content, use it directly
+	if (mediaType == "text" || mediaType == "text/plain") && content != "" {
+		return content, nil
+	}
+
+	// Otherwise, proceed with normal processing
 	request, err := CreateAPIRequest(mediaType, mediaURL)
 	if err != nil {
 		return "", err
@@ -72,8 +79,8 @@ func (o *OpenAIService) ProcessMedia(mediaType string, mediaURL string) (string,
 func (o *OpenAIService) AggregateMedia(items []struct {
 	MediaType string
 	MediaURL  string
+	Content   string
 }) (string, error) {
-
 	systemMessage := CreateMessage("system", Content{
 		ContentType: "text",
 		Text:        "You are tasked with aggregating and summarizing multiple pieces of content across different media types. Provide a comprehensive summary that captures key insights from all sources.",
@@ -81,17 +88,26 @@ func (o *OpenAIService) AggregateMedia(items []struct {
 
 	messages := []Message{systemMessage}
 
-	for _, item := range items {
-		content, err := o.ProcessMedia(item.MediaType, item.MediaURL)
+	log.Println("Starting to process", len(items), "items for aggregation")
+
+	for i, item := range items {
+		log.Printf("Processing item %d: Type=%s, URL=%s, Content=%s", i, item.MediaType, item.MediaURL, item.Content)
+
+		content, err := o.ProcessMedia(item.MediaType, item.MediaURL, item.Content)
 		if err != nil {
+			log.Printf("Error processing media item %d: %v", i, err)
 			return "", err
 		}
+
+		log.Printf("Processed content for item %d: %s", i, content[:min(len(content), 100)])
 
 		messages = append(messages, CreateMessage("user", Content{
 			ContentType: "text",
 			Text:        "Content from " + item.MediaType + ": " + content,
 		}))
 	}
+
+	log.Printf("Sending %d messages to OpenAI for aggregation", len(messages))
 
 	messages = append(messages, CreateMessage("user", Content{
 		ContentType: "text",
@@ -196,4 +212,11 @@ func (o *OpenAIService) callOpenAI(request APIRequest) ([]byte, error) {
 	return json.Marshal(map[string]string{
 		"content": responseContent,
 	})
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
