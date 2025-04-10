@@ -61,22 +61,15 @@ h2 {
   padding: 0 20px;
 }
 
-/* Make inputs and textareas larger and centered */
+/* Create Session inputs and button same width */
 .create-session input[type='text'],
-.create-session textarea {
+.create-session textarea,
+.create-session button {
   display: block;
   width: 80%;
   margin: 0 auto 10px;
 }
 
-/* Make create session button full width */
-.create-session button {
-  display: block;
-  width: 80%;
-  margin: 0 auto;
-}
-
-/* Hide bullet points, enlarge join area */
 .session-list ul {
   list-style-type: none;
   padding: 0;
@@ -130,6 +123,7 @@ h2 {
   background-color: #fefefe;
   border-radius: 4px;
 }
+
 .idea-submission {
   margin-bottom: 20px;
 }
@@ -140,7 +134,6 @@ h2 {
   resize: vertical;
 }
 
-/* Buttons for submitting idea & aggregating, side by side */
 .submission-buttons {
   display: flex;
   gap: 10px;
@@ -164,7 +157,6 @@ h2 {
   margin-bottom: 20px;
 }
 
-/* Chat container */
 .chat-container {
   border: 1px solid #e1e4e8;
   border-radius: 4px;
@@ -201,7 +193,6 @@ h2 {
   margin-top: 10px;
 }
 
-/* General input/textarea focus effects */
 input[type='text'],
 input,
 textarea {
@@ -239,7 +230,7 @@ button:hover {
 }
 
 .session-info {
-  display:flex;
+  display: flex;
   flex-direction: row;
   gap: 30px;
   justify-content: center;
@@ -249,6 +240,7 @@ button:hover {
 .session-id {
   color: #4d4d4d;
 }
+
 .session-id-section {
   font-size: 22px;
   color: #000000;
@@ -259,7 +251,7 @@ button:hover {
   font-size: 22px;
   color: #000000;
   margin-bottom: 10px;
-} 
+}
 
 .voice-call-bar {
   display: flex;
@@ -282,7 +274,8 @@ button:hover {
   gap: 10px;
 }
 
-.mute-button, .deafen-button {
+.mute-button,
+.deafen-button {
   padding: 5px;
   border: none;
   background: transparent;
@@ -290,8 +283,20 @@ button:hover {
   transition: transform 0.2s ease;
 }
 
-.mute-button:hover, .deafen-button:hover {
+.mute-button svg,
+.deafen-button svg {
+  stroke: black;
+}
+
+.mute-button:hover,
+.deafen-button:hover {
   transform: scale(1.1);
+}
+
+.mute-button.active,
+.deafen-button.active {
+  background-color: #ddd;
+  border-radius: 4px;
 }
 
 .discussion-section {

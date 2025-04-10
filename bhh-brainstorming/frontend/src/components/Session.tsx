@@ -26,6 +26,8 @@ const Session: React.FC = () => {
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
   const [discussionStarted, setDiscussionStarted] = useState(false);
   const [isAggregating, setIsAggregating] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isDeafened, setIsDeafened] = useState(false);
 
   const generateUsername = (): string => {
     const letters = 'abcdefghijklmnopqrstuvwxyz';
@@ -353,20 +355,30 @@ const Session: React.FC = () => {
                 <div className="discussion-section">
                   <h3>Group Discussion</h3>
                   <div className="voice-call-bar">
-                    <span className="voice-call-label">Voice Call · <span className="voice-call-status">Connected</span></span>
+                    <span className="voice-call-label">
+                      Voice Call · <span className="voice-call-status">Connected</span>
+                    </span>
                     <div className="call-icons">
-                      <button className="mute-button" title="Mute">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polygon points="5,9 9,9 13,5 13,19 9,15 5,15"></polygon>
-                          <line x1="16" y1="9" x2="21" y2="14"></line>
-                          <line x1="21" y1="9" x2="16" y2="14"></line>
+                      <button
+                        className={isMuted ? 'mute-button active' : 'mute-button'}
+                        title="Mute"
+                        onClick={() => setIsMuted(!isMuted)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" strokeWidth="2">
+                          <polygon points="5,9 9,9 13,5 13,19 9,15 5,15" />
+                          <line x1="16" y1="9" x2="21" y2="14" />
+                          <line x1="21" y1="9" x2="16" y2="14" />
                         </svg>
                       </button>
-                      <button className="deafen-button" title="Deafen">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M4 9v6c0 2.21 1.79 4 4 4h2"></path>
-                          <path d="M14 9v6c0 2.21-1.79 4-4 4"></path>
-                          <line x1="18" y1="4" x2="18" y2="20"></line>
+                      <button
+                        className={isDeafened ? 'deafen-button active' : 'deafen-button'}
+                        title="Deafen"
+                        onClick={() => setIsDeafened(!isDeafened)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" strokeWidth="2">
+                          <path d="M4 9v6c0 2.21 1.79 4 4 4h2" />
+                          <path d="M14 9v6c0 2.21-1.79 4-4 4" />
+                          <line x1="18" y1="4" x2="18" y2="20" />
                         </svg>
                       </button>
                     </div>
