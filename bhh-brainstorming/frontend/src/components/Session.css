@@ -61,9 +61,14 @@ h2 {
   padding: 0 20px;
 }
 
-/* Create Session inputs and button same width */
 .create-session input[type='text'],
-.create-session textarea,
+.create-session textarea {
+  display: block;
+  width: 80%;
+  margin: 0 auto 10px;
+}
+
+
 .create-session button {
   display: block;
   width: 80%;
@@ -73,6 +78,15 @@ h2 {
 .session-list ul {
   list-style-type: none;
   padding: 0;
+}
+
+.chat-input {
+  width: 760px;
+  gap: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
 
 .session-list li {
@@ -187,19 +201,12 @@ h2 {
   transform: scale(1.1);
 }
 
-.chat-input-group {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
 
 input[type='text'],
 input,
 textarea {
   width: 100%;
-  max-width: 400px;
   padding: 10px 15px;
-  margin-bottom: 10px;
   border: 1px solid #d0d7de;
   border-radius: 4px;
   font-size: 1rem;
@@ -295,7 +302,7 @@ button:hover {
 
 .mute-button.active,
 .deafen-button.active {
-  background-color: #ddd;
+  background-color: #043f75;
   border-radius: 4px;
 }
 
@@ -322,4 +329,12 @@ button:hover {
   opacity: 0.8;
   text-align: center;
   margin-top: 10px;
+}
+
+.joining-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
 }

@@ -167,8 +167,10 @@ const Session: React.FC = () => {
           <div className="username-display">
             {username}
           </div>
-          <button onClick={() => setUsername(generateUsername())}>Re-Generate Username</button>
-          <button onClick={handleConnect} style={{ marginTop: '10px' }}>Connect</button>
+          <div className="joining-actions">
+            <button onClick={() => setUsername(generateUsername())}>Re-Generate Username</button>
+            <button onClick={handleConnect} >Connect</button>
+          </div>
         </div>
       ) : (
         <>
@@ -181,6 +183,7 @@ const Session: React.FC = () => {
                 placeholder="Session Name"
                 value={sessionName}
                 onChange={(e) => setSessionName(e.target.value)}
+                className='session-name-input'
               />
               <textarea
                 placeholder="Enter Guiding Questions (one per line)"
