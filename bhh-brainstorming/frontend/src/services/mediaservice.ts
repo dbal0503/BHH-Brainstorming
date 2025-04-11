@@ -7,7 +7,7 @@ export interface MediaUploadResult {
 }
 
 export class MediaService {
-  private apiUrl: string = 'http://localhost:8080';
+  private apiUrl: string = 'https://bhh-brainstorming-production-d38d.up.railway.app';
   
   /**
    * Upload a media file to the server

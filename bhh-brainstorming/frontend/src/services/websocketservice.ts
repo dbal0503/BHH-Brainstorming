@@ -51,7 +51,7 @@ export class WebSocketService {
   connect(username: string): Promise<void> {
     this.username = username;
     return new Promise((resolve, reject) => {
-      this.socket = new WebSocket('ws://localhost:8080/ws');
+      this.socket = new WebSocket('ws://bhh-brainstorming-production-d38d.up.railway.app/ws');
       this.socket.onopen = () => {
         console.log('WebSocket connected');
         this.listSessions();
