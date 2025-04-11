@@ -54,7 +54,7 @@ func main() {
 
 	
 	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:3000", "https://bhh-brainstorming-production-d38d.up.railway.app"}, 
+		AllowedOrigins: []string{"http://localhost:3000", "https://bhh-brainstorming.vercel.app"}, 
 		AllowedMethods: []string{
 			http.MethodGet,
 			http.MethodPost,
