@@ -185,11 +185,6 @@ const Session: React.FC = () => {
     console.log('Media uploaded:', { mediaType, mediaURL, content });
   };
 
-  const handleAggregateIdeas = () => {
-    if (currentSessionId) {
-      websocketService.aggregateIdeas(currentSessionId);
-    }
-  };
 
   const handleSubmitRating = (ideaId: string) => {
     if (currentSessionId) {

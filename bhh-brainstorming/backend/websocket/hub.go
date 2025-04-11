@@ -27,9 +27,9 @@ func (c *Client) readPump() {
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()
-	c.conn.SetReadLimit(512)
+	c.conn.SetReadLimit(1024 * 1024)
 	c.conn.SetReadDeadline(time.Now().Add(180 * time.Second))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(60 * time.Second)); return nil })
+	c.conn.SetPongHandler(func(string) error { return nil })
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
@@ -51,7 +51,6 @@ func (c *Client) writePump() {
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
 				log.Println("Error writing message:", err)
 				return
